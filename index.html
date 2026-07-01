@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
@@ -10,23 +10,37 @@
 <style>
 /* ── TOKENS ── */
 :root{
-  --bg:#0E0F11;--surf:#16181C;--surf2:#1E2026;--surf3:#262830;
-  --border:#2C2E35;--border2:#3A3D47;
-  --text:#F2F3F5;--text2:#9BA3AF;--text3:#5C6370;
-  --red:#C0111A;--red2:#96040D;--red-bg:rgba(192,17,26,.12);
-  --blue:#1B3FD8;--gold:#B8860B;--gold-bg:rgba(184,134,11,.12);
-  --green:#16a34a;--green-bg:rgba(22,163,74,.12);
+  /* ── Premium editorial LIGHT (default) ── */
+  --bg:#F4F2ED;             /* soft editorial cream-gray, never stark white */
+  --surf:#FCFBF8;           /* warm off-white cards */
+  --surf2:#EEEBE3;          /* deeper cream — headers & zebra */
+  --surf3:#E6E2D7;
+  --border:#E1DCD0;--border2:#CFC9BB;
+  --text:#232B37;           /* deep charcoal-navy, never pure black */
+  --text2:#4C5564;          /* muted slate */
+  --text3:#7B8494;          /* soft muted, still legible on cream */
+  /* single cohesive NAVY accent (drives primary buttons, headers, active states) */
+  --red:#2E4B72;--red2:#22395A;--red-bg:rgba(46,75,114,.10);
+  --blue:#2E4B72;           /* links share the accent */
+  --gold:#9A7B2E;--gold-bg:rgba(154,123,46,.12);
+  /* muted success green — reserved for save confirmation */
+  --green:#5C8A6A;--green-bg:rgba(92,138,106,.16);
+  /* muted danger — reserved only for delete + save errors */
+  --danger:#B0524B;--danger-bg:rgba(176,82,75,.12);
   --radius:10px;--radius-lg:16px;
-  --shadow:0 4px 24px rgba(0,0,0,.4);
+  --shadow:0 6px 26px rgba(30,40,60,.10);
 }
-[data-theme="light"]{
-  --bg:#F4F5F7;--surf:#FFFFFF;--surf2:#EDEEF0;--surf3:#E2E4E8;
-  --border:#D4D6DC;--border2:#B8BBC4;
-  --text:#111318;--text2:#4A5060;--text3:#8A8FA0;
-  --red-bg:rgba(192,17,26,.08);
-  --gold-bg:rgba(184,134,11,.10);
-  --green-bg:rgba(22,163,74,.10);
-  --shadow:0 4px 24px rgba(0,0,0,.10);
+[data-theme="dark"]{
+  /* ── Refined premium DARK (optional via toggle) ── */
+  --bg:#12161D;--surf:#1A1F28;--surf2:#222833;--surf3:#2B323E;
+  --border:#313947;--border2:#414A5A;
+  --text:#EDF0F5;--text2:#C0C8D4;--text3:#8B94A3;
+  --red:#5077B0;--red2:#3E5F92;--red-bg:rgba(80,119,176,.16);   /* lighter navy for dark bg */
+  --blue:#7396D2;
+  --gold:#C9A24B;--gold-bg:rgba(201,162,75,.14);
+  --green:#6FA080;--green-bg:rgba(111,160,128,.16);
+  --danger:#C56D66;--danger-bg:rgba(197,109,102,.16);
+  --shadow:0 6px 26px rgba(0,0,0,.45);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{font-size:16px}
@@ -86,13 +100,13 @@ input,select,textarea{font-family:'Inter',sans-serif}
 .table-scroll{overflow-x:auto}
 table{width:100%;border-collapse:collapse;min-width:1100px}
 thead th{
-  background:var(--surf2);font-size:.78rem;font-weight:700;text-transform:uppercase;
-  letter-spacing:.04em;color:var(--text2);text-align:center;padding:14px 10px;
+  background:var(--surf2);font-size:.78rem;font-weight:800;text-transform:uppercase;
+  letter-spacing:.04em;color:var(--text);text-align:center;padding:14px 10px;
   border-bottom:1px solid var(--border);white-space:nowrap;
 }
 thead th:first-child{text-align:left;padding-left:22px;position:sticky;left:0;background:var(--surf2);z-index:2}
 thead th.vip{color:var(--gold)}
-thead th .sub{display:block;font-size:.68rem;color:var(--text3);font-weight:400;
+thead th .sub{display:block;font-size:.7rem;color:var(--text2);font-weight:600;
   text-transform:none;letter-spacing:0;margin-top:3px}
 
 tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
@@ -134,7 +148,7 @@ tbody tr:hover td:first-child{background:var(--surf2)}
   display:flex;align-items:center;justify-content:center;transition:all .15s;
   opacity:0;margin:auto}
 tbody tr:hover .del-row{opacity:1}
-.del-row:hover{background:var(--red);color:#fff;border-color:var(--red)}
+.del-row:hover{background:var(--danger);color:#fff;border-color:var(--danger)}
 
 /* ── ADD AGENT ROW ── */
 .add-row{padding:16px 22px;border-top:1px solid var(--border);
@@ -181,8 +195,8 @@ tbody tr:hover .del-row{opacity:1}
 .lead-card{background:var(--surf2);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px}
 .lead-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:10px}
 .lead-name{font-weight:700;font-size:1rem}
-.lead-stage{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;
-  padding:4px 10px;border-radius:20px;white-space:nowrap}
+.lead-stage{font-size:.76rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;
+  padding:5px 12px;border-radius:20px;white-space:nowrap}
 .lead-details{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px}
 .lead-detail{font-size:.82rem;color:var(--text2);display:flex;align-items:center;gap:6px}
 .lead-detail span{color:var(--text3);font-size:.72rem;min-width:50px}
@@ -190,7 +204,7 @@ tbody tr:hover .del-row{opacity:1}
 .lead-btn{flex:1;padding:8px;border-radius:7px;font-size:.8rem;font-weight:600;cursor:pointer;
   border:1px solid var(--border);background:transparent;color:var(--text2);transition:all .15s}
 .lead-btn:hover{border-color:var(--red);color:var(--red)}
-.lead-btn.danger:hover{border-color:#dc2626;color:#dc2626}
+.lead-btn.danger:hover{border-color:var(--danger);color:var(--danger)}
 .empty-panel{text-align:center;padding:40px 20px;color:var(--text3)}
 .empty-panel .icon{font-size:2rem;margin-bottom:10px;opacity:.4}
 
@@ -283,25 +297,130 @@ tbody tr:hover .del-row{opacity:1}
   color:var(--text3);text-align:center;line-height:1.15}
 .agent-card-remove{width:100%;margin-top:11px;padding:9px;border:1px solid var(--border);
   border-radius:9px;background:transparent;color:var(--text3);font-size:.8rem;font-weight:500;cursor:pointer}
-.agent-card-remove:active{background:var(--red);color:#fff;border-color:var(--red)}
+.agent-card-remove:active{background:var(--danger);color:#fff;border-color:var(--danger)}
 
 /* ── RESPONSIVE ── */
+/* ── ZEBRA STRIPING (both desktop tables) ── */
+tbody tr:nth-child(even){background:var(--surf2)}
+tbody tr:nth-child(even) td:first-child{background:var(--surf2)}
+
+/* ── LEADS CARDS (mobile stacked view) ── */
+.leads-cards{display:none;flex-direction:column;gap:12px}
+.lead-row-card{background:var(--surf);border:1px solid var(--border);border-radius:14px;padding:16px 16px 14px}
+.lead-row-card:nth-child(even){background:var(--surf2)}
+.lrc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:14px}
+.lrc-name{font-size:1.2rem;font-weight:700;line-height:1.25}
+.lrc-agent{display:flex;align-items:center;gap:7px;font-size:.95rem;color:var(--text2);margin-top:5px}
+.lrc-agent .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.lrc-grid{display:flex;flex-direction:column;gap:12px}
+.lrc-field{display:flex;flex-direction:column;gap:3px}
+.lrc-field .k{font-size:.74rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text3)}
+.lrc-field .v{font-size:1.05rem;color:var(--text);word-break:break-word}
+.lrc-field a.v{color:var(--blue);text-decoration:none;font-weight:600;min-height:44px;display:flex;align-items:center}
+[data-theme="dark"] .lrc-field a.v{color:#6b93ff}
+
+/* ── PINNED SAVE INDICATOR (mobile) ── */
+.save-bar{display:none}
+
+/* ── RESPONSIVE (mobile-first for 50+ field use) ── */
 @media(max-width:768px){
+  /* fluid base + no iOS auto-zoom */
+  html{font-size:16px}
   .topbar{padding:14px 16px}
-  .brand-text h1{font-size:1.02rem}
-  .main{padding:18px 12px 70px}
-  .summary-row{grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:20px}
-  .s-card{padding:14px 16px}
-  .s-card .val{font-size:1.7rem}
-  .form-row{grid-template-columns:1fr}
-  .hist-card{flex-direction:column;align-items:flex-start}
+  .brand-text h1{font-size:1.08rem}
+  .brand-text p{font-size:.8rem}
+  .main{padding:16px 12px 100px}   /* bottom room for pinned save bar */
+
+  /* generous separation between major sections */
+  #boardView,#leadsView,#historyView{display:flex;flex-direction:column;gap:20px}
+  .summary-row{grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:0}
+  .toolbar{margin-top:0}
+
+  /* summary cards */
+  .s-card{padding:16px}
+  .s-card .val{font-size:2rem}
+  .s-card .lbl{font-size:.74rem}
+
+  /* tabs: big, swipeable, easy to hit */
   .tabs{overflow-x:auto;-webkit-overflow-scrolling:touch}
-  .tab{padding:12px 15px;white-space:nowrap}
-  /* swap the wide table for stacked cards */
+  .tab{padding:15px 18px;font-size:1.02rem;white-space:nowrap;min-height:54px}
+
+  /* BOARD → stacked agent cards */
   .table-wrap .table-scroll{display:none}
-  .board-cards{display:flex}
-  .leads-controls input{min-width:0}
+  .board-cards{display:flex;padding:0;gap:12px}
+  .agent-card{padding:16px}
+  .agent-card:nth-child(even){background:var(--surf3)}
+  .agent-card-name{font-size:1.2rem}
+  .agent-card-sub{font-size:.82rem}
+  .mcard{min-height:66px;padding:12px 4px}
+  .mcard .mv{font-size:1.55rem}
+  .mcard .ml{font-size:.7rem}
+
+  /* LEADS → stacked cards */
+  .leads-table{display:none}
+  .leads-cards{display:flex}
+  .leads-controls{flex-direction:column;gap:10px}
+
+  /* form controls: 48px+ targets, 16px text, comfy padding, labels above */
+  input,select,textarea,
+  .add-row input,.leads-controls input,.leads-controls select,
+  .form-group input,.form-group select{
+    font-size:16px;min-height:52px;padding:14px 16px;border-radius:12px;width:100%
+  }
+  .form-group label{font-size:.9rem;margin-bottom:3px;letter-spacing:.02em}
+  .form-row{grid-template-columns:1fr;gap:16px}
+  .modal-body{gap:16px;padding:20px 18px}
+  .modal-header h3{font-size:1.3rem}
+
+  /* buttons: 48px+ touch targets */
+  .btn-red,.btn-ghost,.lead-btn,.agent-card-remove,.panel-footer button,.modal-footer button{
+    min-height:52px;font-size:1.02rem;padding:14px 20px
+  }
+  .add-row{flex-direction:column;align-items:stretch;gap:12px}
+  .add-row .btn-red{width:100%}
+  .icon-btn{width:48px;height:48px;font-size:1.25rem}
+  .month-nav button{width:46px;height:46px;font-size:1.35rem}
+  .month-label{font-size:1.05rem;min-width:120px;font-weight:700}
+  .del-row{opacity:1}   /* always visible; no hover on touch */
+
+  /* panel & modal: full width, roomy */
   .panel{width:100vw}
+  .panel-body{padding:18px 16px}
+  .panel-header h2{font-size:1.3rem}
+
+  /* pinned, high-visibility save confirmation */
+  .toolbar .saved-msg{display:none}
+  .save-bar{display:block;position:fixed;left:12px;right:12px;bottom:12px;z-index:90;
+    text-align:center;padding:14px 16px;border-radius:14px;font-size:16px;font-weight:700;
+    background:var(--surf3);color:var(--text2);border:1.5px solid var(--border2);
+    box-shadow:0 6px 22px rgba(0,0,0,.35)}
+  .save-bar.saving{color:var(--gold);border-color:var(--gold)}
+  .save-bar.ok{background:var(--green-bg);color:var(--green);border-color:var(--green)}
+  .save-bar.err{background:var(--danger-bg);color:var(--danger);border-color:var(--danger)}
+}
+
+/* ── DESKTOP: bigger & bolder text for readability ── */
+@media(min-width:769px){
+  html{font-size:17px}
+  thead th{font-size:.86rem;font-weight:800;color:var(--text)}
+  tbody td{font-size:1.02rem;font-weight:600}
+  tbody td:first-child{font-size:1rem}
+  .metric-cell{font-size:1.2rem;font-weight:800}
+  .agent-av-name{font-size:1.02rem;font-weight:700}
+  .agent-av-count{font-size:.78rem;color:var(--text2)}
+  .row-total{font-size:1.1rem}
+  .tab{font-size:.98rem;font-weight:600}
+  .s-card .val{font-size:2.4rem}
+  .s-card .lbl{font-size:.76rem;color:var(--text2);font-weight:700}
+  .brand-text h1{font-size:1.25rem}
+  .month-label{font-size:1rem;font-weight:700}
+  .leads-table tbody td{font-size:.96rem;font-weight:500}
+  .leads-table thead th{font-size:.8rem}
+  .lead-name{font-size:1.08rem}
+  .lead-detail{font-size:.9rem;font-weight:500}
+  .lead-detail span{color:var(--text2)}
+  .hist-month{font-size:1.25rem}
+  .hist-stats{font-size:.92rem}
 }
 </style>
 </head>
@@ -328,8 +447,8 @@ tbody tr:hover .del-row{opacity:1}
   <div style="font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700">Performance Tracker</div>
   <div style="color:#9BA3AF;font-size:.9rem">Enter the team passcode to continue</div>
   <input id="gateInput" type="password" placeholder="Passcode" autocomplete="off" style="background:#1E2026;border:1.5px solid #2C2E35;border-radius:9px;padding:12px 16px;color:#F2F3F5;font-size:1rem;width:min(280px,90vw);text-align:center;outline:none"/>
-  <button id="gateBtn" style="background:#C0111A;color:#fff;border:none;border-radius:9px;padding:12px 28px;font-size:.95rem;font-weight:600;cursor:pointer">Unlock</button>
-  <div id="gateErr" style="color:#C0111A;font-size:.82rem;min-height:18px"></div>
+  <button id="gateBtn" style="background:#2E4B72;color:#fff;border:none;border-radius:9px;padding:12px 28px;font-size:.95rem;font-weight:600;cursor:pointer">Unlock</button>
+  <div id="gateErr" style="color:#B0524B;font-size:.82rem;min-height:18px"></div>
 </div>
 <script>
 (function(){
@@ -393,6 +512,7 @@ tbody tr:hover .del-row{opacity:1}
 </script>
 
 <div class="app">
+<div id="saveBar" class="save-bar">All changes saved</div>
 
 <!-- TOPBAR -->
 <header class="topbar">
@@ -485,6 +605,7 @@ tbody tr:hover .del-row{opacity:1}
         </table>
       </div>
     </div>
+    <div class="leads-cards" id="leadsCards"></div>
   </div>
 
   <!-- HISTORY TAB -->
@@ -593,7 +714,7 @@ tbody tr:hover .del-row{opacity:1}
   const COL_LABELS = {appts:'Appts Booked',vipSeller:'VIP Seller Signed',vipBuyer:'VIP Buyer Signed',
     showed:'Showed',offers:'# Offers',uc:'UC',referrals:'Referrals',closed:'Closed',reviews:'5-Star Reviews'};
   const STAGE_LABELS = COL_LABELS;
-  const AGENT_COLORS = ['#C0111A','#1B3FD8','#B8860B','#16a34a','#7C3AED','#0891B2','#EA580C','#DB2777','#475569','#059669'];
+  const AGENT_COLORS = ['#2E4B72','#1B3FD8','#B8860B','#16a34a','#7C3AED','#0891B2','#EA580C','#DB2777','#475569','#059669'];
   const SOURCES = ['Database','Referral','Open House','Social Media','Website','Zillow','Realtor.com','Cold Call','Sign Call','Other'];
 
   let curDate = new Date();
@@ -633,6 +754,13 @@ tbody tr:hover .del-row{opacity:1}
     }catch(e){ console.error(e); agents=[]; leads=[]; monthIndex=[]; }
   }
 
+  function setSaveBar(text, cls){
+    const b = document.getElementById('saveBar');
+    if(!b) return;
+    b.className = 'save-bar' + (cls ? ' '+cls : '');
+    b.textContent = text;
+  }
+
   async function saveAll(){
     const m = mk();
     if(!monthIndex.includes(m)){ monthIndex.push(m); monthIndex.sort(); }
@@ -643,17 +771,22 @@ tbody tr:hover .del-row{opacity:1}
         window.__cloud.set('leads',      JSON.stringify(leads)),
         window.__cloud.set('monthIndex', JSON.stringify(monthIndex)),
       ]);
+      const stamp = 'Saved · '+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
       const el = document.getElementById('savedMsg');
-      el.textContent = 'Saved · '+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
-      el.classList.add('ok');
-      setTimeout(()=>{ el.classList.remove('ok'); el.textContent='All changes saved'; },2500);
+      el.textContent = stamp; el.classList.add('ok');
+      setSaveBar('✓ '+stamp, 'ok');
+      setTimeout(()=>{
+        el.classList.remove('ok'); el.textContent='All changes saved';
+        setSaveBar('✓ All changes saved', '');
+      },2500);
     }catch(e){
       console.error(e);
       document.getElementById('savedMsg').textContent='Save failed — check connection';
+      setSaveBar('⚠ Save failed — check your connection', 'err');
     }
   }
 
-  function queueSave(){ clearTimeout(saveTimer); saveTimer=setTimeout(saveAll,700); }
+  function queueSave(){ setSaveBar('Saving…','saving'); clearTimeout(saveTimer); saveTimer=setTimeout(saveAll,700); }
 
   /* ── LIVE SYNC: apply changes made by teammates in real time ── */
   function leadModalOpen(){ return document.getElementById('leadModal').classList.contains('open'); }
@@ -961,15 +1094,23 @@ tbody tr:hover .del-row{opacity:1}
       const a = agents.find(x=>x.id===l.agentId);
       const txt = [l.first,l.last,l.phone,l.email,l.source,l.address,l.notes,a?.name||''].join(' ').toLowerCase();
       return (!q||txt.includes(q)) && (!agentF||l.agentId===agentF) && (!stageF||l.stage===stageF);
-    });
+    }).sort((a,b)=>b.date?.localeCompare?.(a.date)||0);
 
     const tbody = document.getElementById('leadsBody');
+    const cards = document.getElementById('leadsCards');
+
     if(!filtered.length){
       tbody.innerHTML='<tr class="loading-row"><td colspan="8"><div class="empty"><div class="icon">○</div><p>No leads match your filters.</p></div></td></tr>';
+      cards.innerHTML='<div class="empty"><div class="icon">○</div><p>No leads match your filters.</p></div>';
       return;
     }
 
-    tbody.innerHTML = filtered.sort((a,b)=>b.date?.localeCompare?.(a.date)||0).map(l=>{
+    const telHref  = p => 'tel:'+esc(p).replace(/[^0-9+]/g,'');
+    const cardTel  = p => p ? `<a class="v" href="${telHref(p)}">${esc(p)}</a>` : '<span class="v">—</span>';
+    const cardMail = e => e ? `<a class="v" href="mailto:${esc(e)}">${esc(e)}</a>` : '<span class="v">—</span>';
+
+    // Desktop table
+    tbody.innerHTML = filtered.map(l=>{
       const a = agents.find(x=>x.id===l.agentId);
       return `<tr>
         <td>${esc(l.first)} ${esc(l.last)}</td>
@@ -978,12 +1119,33 @@ tbody tr:hover .del-row{opacity:1}
           ${esc(a?.name||'Unknown')}
         </td>
         <td>${stagePill(l.stage)}</td>
-        <td>${esc(l.phone||'—')}</td>
-        <td>${esc(l.email||'—')}</td>
+        <td>${l.phone?`<a href="${telHref(l.phone)}" style="color:inherit">${esc(l.phone)}</a>`:'—'}</td>
+        <td>${l.email?`<a href="mailto:${esc(l.email)}" style="color:inherit">${esc(l.email)}</a>`:'—'}</td>
         <td>${esc(l.address||'—')}</td>
         <td>${esc(l.source||'—')}</td>
         <td style="color:var(--text3);font-size:.82rem">${esc(l.date||'—')}</td>
       </tr>`;
+    }).join('');
+
+    // Mobile cards
+    cards.innerHTML = filtered.map(l=>{
+      const a = agents.find(x=>x.id===l.agentId);
+      return `<div class="lead-row-card">
+        <div class="lrc-top">
+          <div>
+            <div class="lrc-name">${esc(l.first)} ${esc(l.last)}</div>
+            <div class="lrc-agent"><span class="dot" style="background:${a?.color||'#888'}"></span>${esc(a?.name||'Unknown')}</div>
+          </div>
+          ${stagePill(l.stage)}
+        </div>
+        <div class="lrc-grid">
+          <div class="lrc-field"><span class="k">Phone</span>${cardTel(l.phone)}</div>
+          <div class="lrc-field"><span class="k">Email</span>${cardMail(l.email)}</div>
+          ${l.address?`<div class="lrc-field"><span class="k">Address</span><span class="v">${esc(l.address)}</span></div>`:''}
+          <div class="lrc-field"><span class="k">Source</span><span class="v">${esc(l.source||'—')}</span></div>
+          <div class="lrc-field"><span class="k">Date Added</span><span class="v">${esc(l.date||'—')}</span></div>
+        </div>
+      </div>`;
     }).join('');
   }
 
@@ -1068,8 +1230,8 @@ tbody tr:hover .del-row{opacity:1}
   /* ── THEME ── */
   const themeBtn = document.getElementById('themeBtn');
   async function initTheme(){
-    let t='dark';
-    try{ t = localStorage.getItem('tracker_theme') || 'dark'; }catch(e){}
+    let t='light';
+    try{ t = localStorage.getItem('tracker_theme') || 'light'; }catch(e){}
     document.documentElement.setAttribute('data-theme',t);
     themeBtn.textContent = t==='light'?'◑':'◐';
   }
