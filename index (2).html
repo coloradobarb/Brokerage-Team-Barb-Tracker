@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Barb Has The Buyer Team — Performance Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,500&display=swap" rel="stylesheet"/>
+<style>
+/* ── TOKENS ── */
+:root{
+  --bg:#0E0F11;--surf:#16181C;--surf2:#1E2026;--surf3:#262830;
+  --border:#2C2E35;--border2:#3A3D47;
+  --text:#F2F3F5;--text2:#9BA3AF;--text3:#5C6370;
+  --red:#C0111A;--red2:#96040D;--red-bg:rgba(192,17,26,.12);
+  --blue:#1B3FD8;--gold:#B8860B;--gold-bg:rgba(184,134,11,.12);
+  --green:#16a34a;--green-bg:rgba(22,163,74,.12);
+  --radius:10px;--radius-lg:16px;
+  --shadow:0 4px 24px rgba(0,0,0,.4);
+}
+[data-theme="light"]{
+  --bg:#F4F5F7;--surf:#FFFFFF;--surf2:#EDEEF0;--surf3:#E2E4E8;
+  --border:#D4D6DC;--border2:#B8BBC4;
+  --text:#111318;--text2:#4A5060;--text3:#8A8FA0;
+  --red-bg:rgba(192,17,26,.08);
+  --gold-bg:rgba(184,134,11,.10);
+  --green-bg:rgba(22,163,74,.10);
+  --shadow:0 4px 24px rgba(0,0,0,.10);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;transition:background .2s,color .2s}
+button{font-family:'Inter',sans-serif;cursor:pointer}
+input,select,textarea{font-family:'Inter',sans-serif}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* ── LAYOUT ── */
+.app{display:flex;flex-direction:column;min-height:100vh}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:18px 32px;border-bottom:1px solid var(--border);
+  background:var(--surf);position:sticky;top:0;z-index:50;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:14px}
+.brand-mark{width:44px;height:44px;border-radius:11px;
+  background:linear-gradient(135deg,var(--red),var(--red2));
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:.85rem;color:#fff;flex-shrink:0;letter-spacing:.02em}
+.brand-text h1{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;line-height:1.2}
+.brand-text p{font-size:.78rem;color:var(--text3);margin-top:2px}
+
+.topbar-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.month-nav{display:flex;align-items:center;gap:8px;background:var(--surf2);
+  border:1px solid var(--border);border-radius:var(--radius);padding:5px 7px}
+.month-nav button{width:34px;height:34px;border-radius:8px;border:none;
+  background:transparent;color:var(--text2);font-size:1.1rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .15s}
+.month-nav button:hover{background:var(--surf3);color:var(--text)}
+.month-label{font-size:.95rem;font-weight:600;min-width:148px;text-align:center}
+.icon-btn{width:40px;height:40px;border-radius:var(--radius);border:1px solid var(--border);
+  background:var(--surf2);color:var(--text2);font-size:1.1rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .2s}
+.icon-btn:hover{border-color:var(--border2);color:var(--text)}
+
+.main{flex:1;padding:28px 32px 80px;max-width:1600px;margin:0 auto;width:100%}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:26px}
+.tab{padding:12px 22px;font-size:.9rem;font-weight:500;color:var(--text3);
+  background:none;border:none;cursor:pointer;
+  border-bottom:2.5px solid transparent;transition:all .2s;margin-bottom:-1px}
+.tab:hover{color:var(--text2)}
+.tab.active{color:var(--text);border-bottom-color:var(--red)}
+
+/* ── SUMMARY CARDS ── */
+.summary-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:28px}
+.s-card{background:var(--surf);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:20px 22px;transition:border-color .2s}
+.s-card:hover{border-color:var(--border2)}
+.s-card .val{font-family:'Playfair Display',serif;font-size:2.2rem;font-weight:700;line-height:1;color:var(--text)}
+.s-card.hl .val{color:var(--red)}
+.s-card .lbl{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-top:8px}
+
+/* ── TABLE ── */
+.table-wrap{background:var(--surf);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+.table-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:1100px}
+thead th{
+  background:var(--surf2);font-size:.78rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:.04em;color:var(--text2);text-align:center;padding:14px 10px;
+  border-bottom:1px solid var(--border);white-space:nowrap;
+}
+thead th:first-child{text-align:left;padding-left:22px;position:sticky;left:0;background:var(--surf2);z-index:2}
+thead th.vip{color:var(--gold)}
+thead th .sub{display:block;font-size:.68rem;color:var(--text3);font-weight:400;
+  text-transform:none;letter-spacing:0;margin-top:3px}
+
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:rgba(128,128,128,.05)}
+
+tbody td{padding:10px 8px;text-align:center;vertical-align:middle}
+tbody td:first-child{
+  text-align:left;padding:14px 10px 14px 22px;font-weight:600;font-size:.95rem;
+  position:sticky;left:0;background:var(--surf);z-index:1;
+  border-right:1px solid var(--border);min-width:160px;
+}
+tbody tr:hover td:first-child{background:var(--surf2)}
+
+.agent-cell{display:flex;align-items:center;gap:11px}
+.agent-av{width:36px;height:36px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:.8rem;color:#fff;flex-shrink:0}
+.agent-av-text{display:flex;flex-direction:column;gap:1px}
+.agent-av-name{font-weight:600;font-size:.95rem}
+.agent-av-count{font-size:.72rem;color:var(--text3)}
+
+/* ── METRIC CELL (clickable) ── */
+.metric-cell{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:52px;height:40px;border-radius:8px;
+  border:1.5px solid var(--border);background:var(--surf2);
+  font-size:1.05rem;font-weight:700;color:var(--text);
+  cursor:pointer;transition:all .18s;padding:0 10px;
+}
+.metric-cell:hover{border-color:var(--red);background:var(--red-bg);color:var(--red)}
+.metric-cell.has-leads{border-color:var(--border2);background:var(--surf3)}
+.metric-cell.has-leads:hover{border-color:var(--red);background:var(--red-bg)}
+
+.row-total{font-weight:800;font-size:1rem;color:var(--red)}
+
+.del-row{width:30px;height:30px;border-radius:7px;border:1px solid var(--border);
+  background:transparent;color:var(--text3);cursor:pointer;font-size:1rem;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;
+  opacity:0;margin:auto}
+tbody tr:hover .del-row{opacity:1}
+.del-row:hover{background:var(--red);color:#fff;border-color:var(--red)}
+
+/* ── ADD AGENT ROW ── */
+.add-row{padding:16px 22px;border-top:1px solid var(--border);
+  display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.add-row input{background:var(--surf2);border:1.5px solid var(--border);
+  border-radius:9px;padding:11px 16px;color:var(--text);font-size:.95rem;
+  min-width:200px;transition:border-color .2s}
+.add-row input:focus{outline:none;border-color:var(--red)}
+.btn-red{background:var(--red);color:#fff;border:none;border-radius:9px;
+  padding:11px 22px;font-size:.95rem;font-weight:600;cursor:pointer;transition:background .2s}
+.btn-red:hover{background:var(--red2)}
+.btn-ghost{background:var(--surf2);color:var(--text2);border:1px solid var(--border);
+  border-radius:9px;padding:11px 18px;font-size:.9rem;font-weight:500;
+  cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:7px}
+.btn-ghost:hover{border-color:var(--border2);color:var(--text)}
+
+/* ── TOOLBAR ── */
+.toolbar{display:flex;justify-content:space-between;align-items:center;
+  margin-top:16px;gap:12px;flex-wrap:wrap}
+.saved-msg{font-size:.82rem;color:var(--text3);transition:color .3s}
+.saved-msg.ok{color:var(--green)}
+
+/* ── SLIDE PANEL ── */
+.panel-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100;
+  opacity:0;transition:opacity .25s;pointer-events:none}
+.panel-backdrop.open{opacity:1;pointer-events:all}
+.panel{position:fixed;top:0;right:0;height:100vh;width:min(540px,100vw);
+  background:var(--surf);border-left:1px solid var(--border);
+  z-index:101;display:flex;flex-direction:column;
+  transform:translateX(100%);transition:transform .3s cubic-bezier(.22,1,.36,1)}
+.panel.open{transform:translateX(0)}
+.panel-header{padding:22px 24px;border-bottom:1px solid var(--border);
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-shrink:0}
+.panel-header h2{font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:700;line-height:1.3}
+.panel-header p{font-size:.82rem;color:var(--text3);margin-top:4px}
+.panel-close{width:36px;height:36px;border-radius:8px;border:1px solid var(--border);
+  background:transparent;color:var(--text2);font-size:1.2rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.panel-close:hover{background:var(--surf2);color:var(--text)}
+.panel-body{flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:16px}
+.panel-footer{padding:16px 24px;border-top:1px solid var(--border);flex-shrink:0;display:flex;gap:10px}
+
+/* ── LEAD CARD in panel ── */
+.lead-card{background:var(--surf2);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px}
+.lead-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:10px}
+.lead-name{font-weight:700;font-size:1rem}
+.lead-stage{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;
+  padding:4px 10px;border-radius:20px;white-space:nowrap}
+.lead-details{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px}
+.lead-detail{font-size:.82rem;color:var(--text2);display:flex;align-items:center;gap:6px}
+.lead-detail span{color:var(--text3);font-size:.72rem;min-width:50px}
+.lead-actions{display:flex;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.lead-btn{flex:1;padding:8px;border-radius:7px;font-size:.8rem;font-weight:600;cursor:pointer;
+  border:1px solid var(--border);background:transparent;color:var(--text2);transition:all .15s}
+.lead-btn:hover{border-color:var(--red);color:var(--red)}
+.lead-btn.danger:hover{border-color:#dc2626;color:#dc2626}
+.empty-panel{text-align:center;padding:40px 20px;color:var(--text3)}
+.empty-panel .icon{font-size:2rem;margin-bottom:10px;opacity:.4}
+
+/* ── LEAD FORM (modal style) ── */
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;
+  display:flex;align-items:center;justify-content:center;padding:20px;
+  opacity:0;pointer-events:none;transition:opacity .25s}
+.modal-backdrop.open{opacity:1;pointer-events:all}
+.modal{background:var(--surf);border:1px solid var(--border);border-radius:var(--radius-lg);
+  width:100%;max-width:480px;box-shadow:var(--shadow);
+  transform:scale(.96);transition:transform .25s}
+.modal-backdrop.open .modal{transform:scale(1)}
+.modal-header{padding:22px 24px 0;display:flex;justify-content:space-between;align-items:flex-start}
+.modal-header h3{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700}
+.modal-body{padding:20px 24px;display:flex;flex-direction:column;gap:14px}
+.modal-footer{padding:0 24px 22px;display:flex;gap:10px;justify-content:flex-end}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-group label{font-size:.8rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.04em}
+.form-group input,.form-group select{
+  background:var(--surf2);border:1.5px solid var(--border);border-radius:9px;
+  padding:11px 14px;color:var(--text);font-size:.95rem;
+  transition:border-color .2s;width:100%;
+}
+.form-group input:focus,.form-group select:focus{outline:none;border-color:var(--red)}
+.form-group select option{background:var(--surf);color:var(--text)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* ── STAGE PILLS ── */
+.stage-appts{background:rgba(59,130,246,.15);color:#60a5fa}
+.stage-vipSeller{background:var(--gold-bg);color:#d97706}
+.stage-vipBuyer{background:var(--gold-bg);color:#d97706}
+.stage-showed{background:rgba(139,92,246,.15);color:#a78bfa}
+.stage-offers{background:rgba(236,72,153,.15);color:#f472b6}
+.stage-uc{background:rgba(249,115,22,.15);color:#fb923c}
+.stage-referrals{background:rgba(20,184,166,.15);color:#2dd4bf}
+.stage-closed{background:var(--green-bg);color:#4ade80}
+.stage-reviews{background:rgba(234,179,8,.15);color:#facc15}
+
+/* ── HISTORY VIEW ── */
+.history-grid{display:grid;gap:12px}
+.hist-card{background:var(--surf);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:22px 24px;display:flex;align-items:center;justify-content:space-between;
+  cursor:pointer;transition:all .2s;flex-wrap:wrap;gap:12px}
+.hist-card:hover{border-color:var(--border2);background:var(--surf2)}
+.hist-month{font-family:'Playfair Display',serif;font-weight:700;font-size:1.15rem}
+.hist-stats{display:flex;gap:24px;font-size:.88rem;color:var(--text2);flex-wrap:wrap}
+.hist-stats b{color:var(--text);font-weight:700}
+
+/* ── LEADS TAB ── */
+.leads-controls{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+.leads-controls input,.leads-controls select{
+  background:var(--surf);border:1.5px solid var(--border);border-radius:9px;
+  padding:10px 14px;color:var(--text);font-size:.9rem;transition:border-color .2s;
+}
+.leads-controls input{flex:1;min-width:200px}
+.leads-controls input:focus,.leads-controls select:focus{outline:none;border-color:var(--red)}
+.leads-table{background:var(--surf);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+.leads-table table{min-width:750px}
+.leads-table thead th{font-size:.75rem;padding:13px 14px}
+.leads-table thead th:first-child{padding-left:18px}
+.leads-table tbody td{padding:13px 14px;font-size:.9rem}
+.leads-table tbody td:first-child{
+  padding-left:18px;position:static;border-right:none;background:transparent;font-weight:600
+}
+
+/* ── EMPTY / LOADING ── */
+.empty{text-align:center;padding:70px 20px;color:var(--text3)}
+.empty .icon{font-size:2.5rem;margin-bottom:14px;opacity:.35}
+.empty p{font-size:.95rem;line-height:1.6}
+.loading-row td{padding:50px;text-align:center;color:var(--text3);font-size:.95rem}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  .topbar{padding:14px 18px}
+  .main{padding:20px 16px 70px}
+  .summary-row{grid-template-columns:repeat(2,1fr)}
+  .form-row{grid-template-columns:1fr}
+  .hist-card{flex-direction:column;align-items:flex-start}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     ⚙️  SETTINGS — THIS IS THE ONLY PART YOU NEED TO EDIT
+     Fill in the two spots marked "PASTE_HERE" using the steps you were
+     given. Everything below the settings is the app; leave it alone.
+     ══════════════════════════════════════════════════════════════════ -->
+<script>
+  /* ── (1) TEAM PASSCODE ──────────────────────────────────────────────
+     Passcode is turned OFF. Anyone with the link can open the tracker.
+     To turn it back on later, put a passcode between the quotes below.  */
+  window.__PASSCODE = "";
+
+  /* readiness plumbing — do NOT edit */
+  window.__cloud = {};
+  window.__cloudReady = new Promise(function(res){ window.__cloudResolve = res; });
+</script>
+
+<!-- Passcode screen (shows only if a passcode is set above) -->
+<div id="gateOverlay" style="position:fixed;inset:0;z-index:9999;background:#0E0F11;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;padding:24px;font-family:'Inter',system-ui,sans-serif;color:#F2F3F5">
+  <div style="font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700">Performance Tracker</div>
+  <div style="color:#9BA3AF;font-size:.9rem">Enter the team passcode to continue</div>
+  <input id="gateInput" type="password" placeholder="Passcode" autocomplete="off" style="background:#1E2026;border:1.5px solid #2C2E35;border-radius:9px;padding:12px 16px;color:#F2F3F5;font-size:1rem;width:min(280px,90vw);text-align:center;outline:none"/>
+  <button id="gateBtn" style="background:#C0111A;color:#fff;border:none;border-radius:9px;padding:12px 28px;font-size:.95rem;font-weight:600;cursor:pointer">Unlock</button>
+  <div id="gateErr" style="color:#C0111A;font-size:.82rem;min-height:18px"></div>
+</div>
+<script>
+(function(){
+  var need = window.__PASSCODE && window.__PASSCODE.length > 0;
+  var unlocked = false;
+  try{ unlocked = sessionStorage.getItem('tracker_unlocked') === '1'; }catch(e){}
+  var ov = document.getElementById('gateOverlay');
+  if(!need || unlocked){ ov.style.display='none'; return; }
+  ov.style.display='flex';
+  setTimeout(function(){ document.getElementById('gateInput').focus(); }, 60);
+  function tryUnlock(){
+    var v = document.getElementById('gateInput').value;
+    if(v === window.__PASSCODE){
+      try{ sessionStorage.setItem('tracker_unlocked','1'); }catch(e){}
+      ov.style.display='none';
+    } else {
+      document.getElementById('gateErr').textContent = 'Incorrect passcode';
+    }
+  }
+  document.getElementById('gateBtn').addEventListener('click', tryUnlock);
+  document.getElementById('gateInput').addEventListener('keydown', function(e){ if(e.key==='Enter') tryUnlock(); });
+})();
+</script>
+
+<!-- Cloud database connection (Firebase) -->
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js';
+  import { getDatabase, ref, get, set, onValue } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-database.js';
+  import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js';
+
+  /* ── (2) FIREBASE CONFIG ────────────────────────────────────────────
+     Paste the values from your Firebase project here, replacing every
+     "PASTE_HERE". Keep the quotation marks.                            */
+  const firebaseConfig = {
+    apiKey:      "AIzaSyBgSJ0gT6Ksse-a3aac8DHMDf8orgYH9eM",
+    authDomain:  "barb-s-team-performancet-5e483.firebaseapp.com",
+    databaseURL: "https://barb-s-team-performancet-5e483-default-rtdb.firebaseio.com",
+    projectId:   "barb-s-team-performancet-5e483",
+    appId:       "1:10388134166:web:dd959e5bfa7579878c1837"
+  };
+  /* ─────────────────────────────────────────────────────────────────── */
+
+  const BASE = 'board'; // all team data lives under this one node
+  try {
+    if (firebaseConfig.apiKey === "PASTE_HERE") {
+      console.warn("Firebase config not filled in yet — data will not save until you paste your config.");
+    }
+    const app  = initializeApp(firebaseConfig);
+    const db   = getDatabase(app);
+    const auth = getAuth(app);
+    window.__cloud.get       = (k)    => get(ref(db, BASE + '/' + k)).then(s => s.exists() ? s.val() : null);
+    window.__cloud.set       = (k, v) => set(ref(db, BASE + '/' + k), v);
+    window.__cloud.subscribe = (k, cb)=> onValue(ref(db, BASE + '/' + k), s => cb(s.exists() ? s.val() : null));
+    await signInAnonymously(auth);
+    window.__cloud.ok = true;
+  } catch (e) {
+    console.error("Cloud connection failed:", e);
+  } finally {
+    window.__cloudResolve(true);
+  }
+</script>
+
+<div class="app">
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark">YHS</div>
+    <div class="brand-text">
+      <h1>Performance Tracker</h1>
+      <p>Your Home Sold Guaranteed Realty · Barb Has The Buyer Team</p>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <button class="icon-btn" id="themeBtn" title="Toggle theme">◐</button>
+    <div class="month-nav">
+      <button id="prevBtn">‹</button>
+      <span class="month-label" id="monthLabel">—</span>
+      <button id="nextBtn">›</button>
+    </div>
+  </div>
+</header>
+
+<div class="main">
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" data-tab="board">📋 Board</button>
+    <button class="tab" data-tab="leads">👥 All Leads</button>
+    <button class="tab" data-tab="history">📅 History</button>
+  </div>
+
+  <!-- BOARD TAB -->
+  <div id="boardView">
+    <div class="summary-row" id="summaryRow"></div>
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table id="mainTable">
+          <thead>
+            <tr>
+              <th>Agent</th>
+              <th>Appts<span class="sub">Booked</span></th>
+              <th class="vip">VIP Seller<span class="sub">Signed</span></th>
+              <th class="vip">VIP Buyer<span class="sub">Signed</span></th>
+              <th>Showed</th>
+              <th># Offers</th>
+              <th>UC</th>
+              <th>Referrals</th>
+              <th>Closed</th>
+              <th>5-Star<span class="sub">Reviews</span></th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+      <div class="add-row">
+        <input type="text" id="newAgentInput" placeholder="Agent name..." maxlength="30"/>
+        <button class="btn-red" id="addAgentBtn">+ Add Agent</button>
+      </div>
+    </div>
+    <div class="toolbar">
+      <span class="saved-msg" id="savedMsg">All changes saved</span>
+      <div style="display:flex;gap:8px">
+        <button class="btn-ghost" id="exportBtn">⬇ Export CSV</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEADS TAB -->
+  <div id="leadsView" style="display:none">
+    <div class="leads-controls">
+      <input type="text" id="leadSearch" placeholder="Search by name, email, phone..."/>
+      <select id="leadFilterAgent"><option value="">All Agents</option></select>
+      <select id="leadFilterStage"><option value="">All Stages</option></select>
+    </div>
+    <div class="leads-table">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Agent</th>
+              <th>Stage</th>
+              <th>Phone</th>
+              <th>Email</th>
+              <th>Source</th>
+              <th>Date Added</th>
+            </tr>
+          </thead>
+          <tbody id="leadsBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTORY TAB -->
+  <div id="historyView" style="display:none">
+    <div class="history-grid" id="historyGrid"></div>
+  </div>
+</div>
+
+<!-- SLIDE PANEL: Lead List for a cell -->
+<div class="panel-backdrop" id="panelBackdrop"></div>
+<div class="panel" id="sidePanel">
+  <div class="panel-header">
+    <div>
+      <h2 id="panelTitle">Leads</h2>
+      <p id="panelSub"></p>
+    </div>
+    <button class="panel-close" id="panelClose">×</button>
+  </div>
+  <div class="panel-body" id="panelBody"></div>
+  <div class="panel-footer">
+    <button class="btn-red" id="panelAddBtn">+ Add Lead</button>
+    <button class="btn-ghost" id="panelCloseBtn">Close</button>
+  </div>
+</div>
+
+<!-- LEAD FORM MODAL -->
+<div class="modal-backdrop" id="leadModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">Add Lead</h3>
+      <button class="panel-close" id="modalClose">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>First Name *</label>
+          <input type="text" id="fldFirst" placeholder="Jane"/>
+        </div>
+        <div class="form-group">
+          <label>Last Name *</label>
+          <input type="text" id="fldLast" placeholder="Smith"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Phone</label>
+          <input type="tel" id="fldPhone" placeholder="(719) 555-0100"/>
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="fldEmail" placeholder="jane@email.com"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Lead Source</label>
+          <select id="fldSource">
+            <option value="">Select source...</option>
+            <option>Database</option>
+            <option>Referral</option>
+            <option>Open House</option>
+            <option>Social Media</option>
+            <option>Website</option>
+            <option>Zillow</option>
+            <option>Realtor.com</option>
+            <option>Cold Call</option>
+            <option>Sign Call</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Pipeline Stage *</label>
+          <select id="fldStage">
+            <option value="appts">Appts Booked</option>
+            <option value="vipSeller">VIP Seller Signed</option>
+            <option value="vipBuyer">VIP Buyer Signed</option>
+            <option value="showed">Showed</option>
+            <option value="offers">Offers Made</option>
+            <option value="uc">Under Contract</option>
+            <option value="referrals">Referrals</option>
+            <option value="closed">Closed</option>
+            <option value="reviews">5-Star Reviews</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Notes</label>
+        <input type="text" id="fldNotes" placeholder="Any additional notes..."/>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" id="modalCancel">Cancel</button>
+      <button class="btn-red" id="modalSave">Save Lead</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  /* ── CONSTANTS ── */
+  const COLS = ['appts','vipSeller','vipBuyer','showed','offers','uc','referrals','closed','reviews'];
+  const COL_LABELS = {appts:'Appts Booked',vipSeller:'VIP Seller Signed',vipBuyer:'VIP Buyer Signed',
+    showed:'Showed',offers:'# Offers',uc:'UC',referrals:'Referrals',closed:'Closed',reviews:'5-Star Reviews'};
+  const STAGE_LABELS = COL_LABELS;
+  const AGENT_COLORS = ['#C0111A','#1B3FD8','#B8860B','#16a34a','#7C3AED','#0891B2','#EA580C','#DB2777','#475569','#059669'];
+  const SOURCES = ['Database','Referral','Open House','Social Media','Website','Zillow','Realtor.com','Cold Call','Sign Call','Other'];
+
+  let curDate = new Date();
+  let agents = [];   // [{id,name,color}]
+  let leads = [];    // [{id,agentId,first,last,phone,email,source,stage,notes,date,month}]
+  let monthIndex = [];
+  let saveTimer = null;
+  let panelCtx = null; // {agentId, col}
+  let editingLeadId = null;
+
+  /* ── HELPERS ── */
+  function mk(){ return curDate.getFullYear()+'-'+String(curDate.getMonth()+1).padStart(2,'0'); }
+  function mLabel(d){ return d.toLocaleDateString('en-US',{month:'long',year:'numeric'}); }
+  function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+  function esc(s){ const d=document.createElement('div');d.textContent=s||'';return d.innerHTML; }
+  function initials(n){ return (n||'').split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase()||'?'; }
+  function leadsForCell(agentId,col){ return leads.filter(l=>l.agentId===agentId&&l.stage===col&&l.month===mk()); }
+  function rowTotal(agentId){ return COLS.reduce((s,c)=>s+leadsForCell(agentId,c).length,0); }
+
+  function stagePill(stage){
+    const lbl = STAGE_LABELS[stage]||stage;
+    return `<span class="lead-stage stage-${stage}">${esc(lbl)}</span>`;
+  }
+
+  /* ── STORAGE (cloud / Firebase) ── */
+  async function loadAll(){
+    try{
+      if(!window.__cloud.get){ agents=[]; leads=[]; monthIndex=[]; return; }
+      const [a,l,i] = await Promise.all([
+        window.__cloud.get('agents').catch(()=>null),
+        window.__cloud.get('leads').catch(()=>null),
+        window.__cloud.get('monthIndex').catch(()=>null),
+      ]);
+      agents     = a ? JSON.parse(a) : [];
+      leads      = l ? JSON.parse(l) : [];
+      monthIndex = i ? JSON.parse(i) : [];
+    }catch(e){ console.error(e); agents=[]; leads=[]; monthIndex=[]; }
+  }
+
+  async function saveAll(){
+    const m = mk();
+    if(!monthIndex.includes(m)){ monthIndex.push(m); monthIndex.sort(); }
+    try{
+      if(!window.__cloud.set) throw new Error('cloud not ready');
+      await Promise.all([
+        window.__cloud.set('agents',     JSON.stringify(agents)),
+        window.__cloud.set('leads',      JSON.stringify(leads)),
+        window.__cloud.set('monthIndex', JSON.stringify(monthIndex)),
+      ]);
+      const el = document.getElementById('savedMsg');
+      el.textContent = 'Saved · '+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+      el.classList.add('ok');
+      setTimeout(()=>{ el.classList.remove('ok'); el.textContent='All changes saved'; },2500);
+    }catch(e){
+      console.error(e);
+      document.getElementById('savedMsg').textContent='Save failed — check connection';
+    }
+  }
+
+  function queueSave(){ clearTimeout(saveTimer); saveTimer=setTimeout(saveAll,700); }
+
+  /* ── LIVE SYNC: apply changes made by teammates in real time ── */
+  function leadModalOpen(){ return document.getElementById('leadModal').classList.contains('open'); }
+  function refreshActive(){
+    updateMonthLabel();
+    renderBoard();
+    const t = document.querySelector('.tab.active')?.dataset.tab;
+    if(t==='leads')   renderLeadsTab();
+    if(t==='history') renderHistory();
+    if(panelCtx)      renderPanel();
+  }
+  function subscribeRealtime(){
+    if(!window.__cloud.subscribe) return;
+    window.__cloud.subscribe('leads', (v)=>{
+      if(editingLeadId || leadModalOpen()) return;      // don't interrupt an edit in progress
+      if(v === JSON.stringify(leads)) return;           // ignore our own echo / no change
+      leads = v ? JSON.parse(v) : [];
+      refreshActive();
+    });
+    window.__cloud.subscribe('agents', (v)=>{
+      if(v === JSON.stringify(agents)) return;
+      agents = v ? JSON.parse(v) : [];
+      refreshActive();
+    });
+    window.__cloud.subscribe('monthIndex', (v)=>{
+      if(v){ try{ monthIndex = JSON.parse(v); }catch(e){} }
+    });
+  }
+
+  /* ── RENDER BOARD ── */
+  function renderSummary(){
+    const tot = {};
+    COLS.forEach(c=>tot[c]=leads.filter(l=>l.stage===c&&l.month===mk()).length);
+    document.getElementById('summaryRow').innerHTML = [
+      {k:'appts',l:'Appts Booked'},{k:'vipSeller',l:'VIP Seller'},{k:'vipBuyer',l:'VIP Buyer'},
+      {k:'showed',l:'Showed'},{k:'offers',l:'Offers'},{k:'uc',l:'Under Contract'},
+      {k:'referrals',l:'Referrals'},{k:'closed',l:'Closed',hl:true},{k:'reviews',l:'5-Star Reviews'},
+    ].map(c=>`<div class="s-card${c.hl?' hl':''}">
+      <div class="val">${tot[c.k]||0}</div>
+      <div class="lbl">${c.l}</div>
+    </div>`).join('');
+  }
+
+  function renderTable(){
+    const tbody = document.getElementById('tableBody');
+    if(!agents.length){
+      tbody.innerHTML='<tr class="loading-row"><td colspan="11"><div class="empty"><div class="icon">+</div><p>No agents yet. Add your first agent below.</p></div></td></tr>';
+      return;
+    }
+    tbody.innerHTML = agents.map(agent=>{
+      const cells = COLS.map(col=>{
+        const cnt = leadsForCell(agent.id,col).length;
+        return `<td><button class="metric-cell${cnt>0?' has-leads':''}" data-aid="${agent.id}" data-col="${col}">${cnt}</button></td>`;
+      }).join('');
+      const total = rowTotal(agent.id);
+      return `<tr>
+        <td>
+          <div class="agent-cell">
+            <div class="agent-av" style="background:${agent.color}">${initials(agent.name)}</div>
+            <div class="agent-av-text">
+              <span class="agent-av-name">${esc(agent.name)}</span>
+              <span class="agent-av-count">${total} lead${total!==1?'s':''} this month</span>
+            </div>
+          </div>
+        </td>
+        ${cells}
+        <td class="row-total">${total}</td>
+        <td><button class="del-row" data-del="${agent.id}" title="Remove agent">×</button></td>
+      </tr>`;
+    }).join('');
+
+    tbody.querySelectorAll('.metric-cell').forEach(btn=>{
+      btn.addEventListener('click',()=>openPanel(btn.dataset.aid, btn.dataset.col));
+    });
+    tbody.querySelectorAll('[data-del]').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const a = agents.find(x=>x.id===btn.dataset.del);
+        if(a && confirm(`Remove ${a.name} and all their leads this month?`)){
+          agents = agents.filter(x=>x.id!==btn.dataset.del);
+          leads = leads.filter(l=>!(l.agentId===btn.dataset.del&&l.month===mk()));
+          renderBoard(); queueSave();
+        }
+      });
+    });
+  }
+
+  function renderBoard(){ renderSummary(); renderTable(); }
+
+  /* ── PANEL ── */
+  function openPanel(agentId, col){
+    panelCtx = {agentId, col};
+    const agent = agents.find(a=>a.id===agentId);
+    document.getElementById('panelTitle').textContent = COL_LABELS[col];
+    document.getElementById('panelSub').textContent = (agent?.name||'') + ' · ' + mLabel(curDate);
+    renderPanel();
+    document.getElementById('sidePanel').classList.add('open');
+    document.getElementById('panelBackdrop').classList.add('open');
+  }
+
+  function renderPanel(){
+    if(!panelCtx) return;
+    const {agentId,col} = panelCtx;
+    const cellLeads = leadsForCell(agentId,col);
+    const body = document.getElementById('panelBody');
+    if(!cellLeads.length){
+      body.innerHTML=`<div class="empty-panel"><div class="icon">○</div><p>No leads here yet.<br>Click "+ Add Lead" to add one.</p></div>`;
+      return;
+    }
+    body.innerHTML = cellLeads.map(l=>`
+      <div class="lead-card">
+        <div class="lead-card-top">
+          <div class="lead-name">${esc(l.first)} ${esc(l.last)}</div>
+          ${stagePill(l.stage)}
+        </div>
+        <div class="lead-details">
+          <div class="lead-detail"><span>Phone</span>${esc(l.phone||'—')}</div>
+          <div class="lead-detail"><span>Email</span>${esc(l.email||'—')}</div>
+          <div class="lead-detail"><span>Source</span>${esc(l.source||'—')}</div>
+          <div class="lead-detail"><span>Added</span>${esc(l.date||'—')}</div>
+          ${l.notes?`<div class="lead-detail" style="grid-column:span 2"><span>Notes</span>${esc(l.notes)}</div>`:''}
+        </div>
+        <div class="lead-actions">
+          <button class="lead-btn" data-edit="${l.id}">✏ Edit / Move Stage</button>
+          <button class="lead-btn danger" data-deletelead="${l.id}">🗑 Remove</button>
+        </div>
+      </div>
+    `).join('');
+
+    body.querySelectorAll('[data-edit]').forEach(btn=>{
+      btn.addEventListener('click',()=>openLeadModal(btn.dataset.edit));
+    });
+    body.querySelectorAll('[data-deletelead]').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        if(confirm('Remove this lead?')){
+          leads = leads.filter(l=>l.id!==btn.dataset.deletelead);
+          renderPanel(); renderBoard(); renderLeadsTab(); queueSave();
+        }
+      });
+    });
+  }
+
+  function closePanel(){
+    document.getElementById('sidePanel').classList.remove('open');
+    document.getElementById('panelBackdrop').classList.remove('open');
+    panelCtx = null;
+  }
+
+  document.getElementById('panelClose').addEventListener('click',closePanel);
+  document.getElementById('panelCloseBtn').addEventListener('click',closePanel);
+  document.getElementById('panelBackdrop').addEventListener('click',closePanel);
+  document.getElementById('panelAddBtn').addEventListener('click',()=>{
+    if(panelCtx) openLeadModal(null, panelCtx.agentId, panelCtx.col);
+  });
+
+  /* ── LEAD MODAL ── */
+  function openLeadModal(leadId=null, agentId=null, col=null){
+    editingLeadId = leadId;
+    const lead = leadId ? leads.find(l=>l.id===leadId) : null;
+    document.getElementById('modalTitle').textContent = lead ? 'Edit Lead' : 'Add New Lead';
+    document.getElementById('fldFirst').value = lead?.first||'';
+    document.getElementById('fldLast').value  = lead?.last||'';
+    document.getElementById('fldPhone').value = lead?.phone||'';
+    document.getElementById('fldEmail').value = lead?.email||'';
+    document.getElementById('fldSource').value= lead?.source||'';
+    document.getElementById('fldNotes').value = lead?.notes||'';
+    document.getElementById('fldStage').value = lead?.stage || col || 'appts';
+    document.getElementById('leadModal').classList.add('open');
+    setTimeout(()=>document.getElementById('fldFirst').focus(),100);
+    // store agent context for new lead
+    document.getElementById('leadModal').dataset.agentId = lead?.agentId || agentId || '';
+  }
+
+  function closeLeadModal(){ document.getElementById('leadModal').classList.remove('open'); editingLeadId=null; }
+  document.getElementById('modalClose').addEventListener('click',closeLeadModal);
+  document.getElementById('modalCancel').addEventListener('click',closeLeadModal);
+  document.getElementById('leadModal').addEventListener('click',e=>{ if(e.target===document.getElementById('leadModal')) closeLeadModal(); });
+
+  document.getElementById('modalSave').addEventListener('click',()=>{
+    const first = document.getElementById('fldFirst').value.trim();
+    const last  = document.getElementById('fldLast').value.trim();
+    if(!first&&!last){ alert('Please enter at least a first or last name.'); return; }
+    const stage = document.getElementById('fldStage').value;
+    const agentId = document.getElementById('leadModal').dataset.agentId;
+
+    if(editingLeadId){
+      const idx = leads.findIndex(l=>l.id===editingLeadId);
+      if(idx>-1){
+        leads[idx] = {...leads[idx],
+          first,last,
+          phone:document.getElementById('fldPhone').value.trim(),
+          email:document.getElementById('fldEmail').value.trim(),
+          source:document.getElementById('fldSource').value,
+          notes:document.getElementById('fldNotes').value.trim(),
+          stage,
+        };
+        // update panelCtx if stage changed
+        if(panelCtx && leads[idx].agentId===panelCtx.agentId){
+          panelCtx.col = stage;
+        }
+      }
+    } else {
+      if(!agentId){ alert('No agent selected.'); return; }
+      leads.push({
+        id:uid(), agentId, month:mk(),
+        first, last,
+        phone:document.getElementById('fldPhone').value.trim(),
+        email:document.getElementById('fldEmail').value.trim(),
+        source:document.getElementById('fldSource').value,
+        notes:document.getElementById('fldNotes').value.trim(),
+        stage,
+        date:new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}),
+      });
+      if(panelCtx) panelCtx.col = stage;
+    }
+    closeLeadModal();
+    renderPanel(); renderBoard(); renderLeadsTab(); queueSave();
+  });
+
+  /* ── ADD AGENT ── */
+  document.getElementById('addAgentBtn').addEventListener('click',addAgent);
+  document.getElementById('newAgentInput').addEventListener('keydown',e=>{ if(e.key==='Enter') addAgent(); });
+  function addAgent(){
+    const inp = document.getElementById('newAgentInput');
+    const name = inp.value.trim();
+    if(!name) return;
+    const color = AGENT_COLORS[agents.length % AGENT_COLORS.length];
+    agents.push({id:uid(),name,color});
+    inp.value=''; renderBoard(); queueSave();
+  }
+
+  /* ── LEADS TAB ── */
+  function renderLeadsTab(){
+    // Populate agent filter
+    const af = document.getElementById('leadFilterAgent');
+    const prev = af.value;
+    af.innerHTML = '<option value="">All Agents</option>' +
+      agents.map(a=>`<option value="${a.id}">${esc(a.name)}</option>`).join('');
+    af.value = prev;
+
+    // Populate stage filter
+    const sf = document.getElementById('leadFilterStage');
+    const sprev = sf.value;
+    sf.innerHTML = '<option value="">All Stages</option>' +
+      COLS.map(c=>`<option value="${c}">${esc(COL_LABELS[c])}</option>`).join('');
+    sf.value = sprev;
+
+    filterLeads();
+  }
+
+  function filterLeads(){
+    const q = document.getElementById('leadSearch').value.toLowerCase();
+    const agentF = document.getElementById('leadFilterAgent').value;
+    const stageF = document.getElementById('leadFilterStage').value;
+    const filtered = leads.filter(l=>{
+      const a = agents.find(x=>x.id===l.agentId);
+      const txt = [l.first,l.last,l.phone,l.email,l.source,l.notes,a?.name||''].join(' ').toLowerCase();
+      return (!q||txt.includes(q)) && (!agentF||l.agentId===agentF) && (!stageF||l.stage===stageF);
+    });
+
+    const tbody = document.getElementById('leadsBody');
+    if(!filtered.length){
+      tbody.innerHTML='<tr class="loading-row"><td colspan="7"><div class="empty"><div class="icon">○</div><p>No leads match your filters.</p></div></td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = filtered.sort((a,b)=>b.date?.localeCompare?.(a.date)||0).map(l=>{
+      const a = agents.find(x=>x.id===l.agentId);
+      return `<tr>
+        <td>${esc(l.first)} ${esc(l.last)}</td>
+        <td style="display:flex;align-items:center;gap:8px;padding:13px 14px">
+          <span style="width:8px;height:8px;border-radius:50%;background:${a?.color||'#888'};flex-shrink:0;display:inline-block"></span>
+          ${esc(a?.name||'Unknown')}
+        </td>
+        <td>${stagePill(l.stage)}</td>
+        <td>${esc(l.phone||'—')}</td>
+        <td>${esc(l.email||'—')}</td>
+        <td>${esc(l.source||'—')}</td>
+        <td style="color:var(--text3);font-size:.82rem">${esc(l.date||'—')}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  ['leadSearch','leadFilterAgent','leadFilterStage'].forEach(id=>{
+    document.getElementById(id).addEventListener('input',filterLeads);
+  });
+
+  /* ── HISTORY ── */
+  async function renderHistory(){
+    const grid = document.getElementById('historyGrid');
+    if(!monthIndex.length){
+      grid.innerHTML='<div class="empty"><div class="icon">○</div><p>No history yet. Track a month to build your archive.</p></div>';
+      return;
+    }
+    grid.innerHTML = monthIndex.slice().reverse().map(m=>{
+      const [y,mo] = m.split('-');
+      const label = new Date(+y,+mo-1,1).toLocaleDateString('en-US',{month:'long',year:'numeric'});
+      const mLeads = leads.filter(l=>l.month===m);
+      const closed = mLeads.filter(l=>l.stage==='closed').length;
+      const appts  = mLeads.filter(l=>l.stage==='appts').length;
+      const rev    = mLeads.filter(l=>l.stage==='reviews').length;
+      return `<div class="hist-card" data-month="${m}">
+        <div class="hist-month">${label}</div>
+        <div class="hist-stats">
+          <span>${mLeads.length} lead${mLeads.length!==1?'s':''}</span>
+          <span><b>${closed}</b> closed</span>
+          <span><b>${appts}</b> appts</span>
+          <span><b>${rev}</b> reviews</span>
+        </div>
+      </div>`;
+    }).join('');
+
+    grid.querySelectorAll('.hist-card').forEach(card=>{
+      card.addEventListener('click',()=>{
+        const [y,m] = card.dataset.month.split('-');
+        curDate = new Date(+y,+m-1,1);
+        document.querySelector('.tab[data-tab="board"]').click();
+        updateMonthLabel();
+        renderBoard();
+      });
+    });
+  }
+
+  /* ── TABS ── */
+  document.querySelectorAll('.tab').forEach(tab=>{
+    tab.addEventListener('click',()=>{
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      tab.classList.add('active');
+      const t = tab.dataset.tab;
+      document.getElementById('boardView').style.display   = t==='board'?'':'none';
+      document.getElementById('leadsView').style.display   = t==='leads'?'':'none';
+      document.getElementById('historyView').style.display = t==='history'?'':'none';
+      if(t==='leads') renderLeadsTab();
+      if(t==='history') renderHistory();
+    });
+  });
+
+  /* ── MONTH NAV ── */
+  function updateMonthLabel(){
+    document.getElementById('monthLabel').textContent = mLabel(curDate);
+  }
+  document.getElementById('prevBtn').addEventListener('click',()=>{
+    curDate.setMonth(curDate.getMonth()-1); updateMonthLabel(); renderBoard();
+  });
+  document.getElementById('nextBtn').addEventListener('click',()=>{
+    curDate.setMonth(curDate.getMonth()+1); updateMonthLabel(); renderBoard();
+  });
+
+  /* ── EXPORT ── */
+  document.getElementById('exportBtn').addEventListener('click',()=>{
+    const rows = [['Agent','Stage','First','Last','Phone','Email','Source','Notes','Date','Month']];
+    leads.forEach(l=>{
+      const a=agents.find(x=>x.id===l.agentId);
+      rows.push([a?.name||'',COL_LABELS[l.stage]||l.stage,l.first,l.last,l.phone,l.email,l.source,l.notes,l.date,l.month]);
+    });
+    const csv=rows.map(r=>r.map(v=>`"${(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+    a.download='leads-export-'+mk()+'.csv'; a.click();
+  });
+
+  /* ── THEME ── */
+  const themeBtn = document.getElementById('themeBtn');
+  async function initTheme(){
+    let t='dark';
+    try{ t = localStorage.getItem('tracker_theme') || 'dark'; }catch(e){}
+    document.documentElement.setAttribute('data-theme',t);
+    themeBtn.textContent = t==='light'?'◑':'◐';
+  }
+  themeBtn.addEventListener('click',()=>{
+    const cur=document.documentElement.getAttribute('data-theme')||'dark';
+    const nxt=cur==='light'?'dark':'light';
+    document.documentElement.setAttribute('data-theme',nxt);
+    themeBtn.textContent=nxt==='light'?'◑':'◐';
+    try{ localStorage.setItem('tracker_theme',nxt); }catch(e){}
+  });
+
+  /* ── INIT ── */
+  async function init(){
+    await window.__cloudReady;   // wait for the cloud connection
+    await loadAll();
+    updateMonthLabel();
+    renderBoard();
+    initTheme();
+    subscribeRealtime();         // live updates from teammates
+  }
+  init();
+  window.addEventListener('beforeunload',()=>{ if(saveTimer) saveAll(); });
+})();
+</script>
+</body>
+</html>
