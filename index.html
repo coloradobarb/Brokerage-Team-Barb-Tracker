@@ -323,6 +323,47 @@ tbody tr:nth-child(even) td:first-child{background:var(--surf2)}
 /* ── PINNED SAVE INDICATOR (mobile) ── */
 .save-bar{display:none}
 
+/* ── DASHBOARD ── */
+.dash-head{margin-bottom:20px}
+.dash-head h2{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700}
+.dash-head p{color:var(--text2);font-size:.92rem;margin-top:4px}
+.dash-section{background:var(--surf);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:22px;margin-bottom:20px;box-shadow:var(--shadow)}
+.dash-section h3{font-size:1.05rem;font-weight:800;margin-bottom:4px;letter-spacing:.01em}
+.dash-section .sub{font-size:.82rem;color:var(--text2);margin-bottom:18px}
+.dash-empty{color:var(--text3);text-align:center;padding:24px 0;font-size:.95rem}
+.dash-chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.chip{padding:9px 16px;border:1.5px solid var(--border);border-radius:22px;background:var(--surf2);
+  font-weight:700;font-size:.85rem;cursor:pointer;color:var(--text2);transition:all .15s}
+.chip.active{background:var(--red);color:#fff;border-color:var(--red)}
+/* leaderboard */
+.lb-item{padding:14px 0;border-bottom:1px solid var(--border)}
+.lb-item:last-child{border-bottom:none}
+.lb-top{display:flex;align-items:center;gap:11px;margin-bottom:9px}
+.lb-rank{font-weight:800;color:var(--text3);min-width:24px;text-align:center;font-size:1.05rem}
+.lb-name{font-weight:700;font-size:1.05rem;flex:1}
+.lb-val{font-weight:800;font-size:1.15rem;color:var(--text)}
+.lb-sub{font-size:.82rem;color:var(--text2);white-space:nowrap}
+.lb-track{height:14px;background:var(--surf3);border-radius:7px;overflow:hidden}
+.lb-fill{height:100%;border-radius:7px;transition:width .5s ease}
+/* funnel */
+.fn-row{margin-bottom:16px}
+.fn-row:last-child{margin-bottom:0}
+.fn-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px}
+.fn-label{font-weight:700;font-size:.98rem}
+.fn-count{font-weight:800;font-size:1.05rem;color:var(--red)}
+.fn-track{height:32px;background:var(--surf3);border-radius:9px;overflow:hidden}
+.fn-fill{height:100%;background:linear-gradient(90deg,var(--red2),var(--red));border-radius:9px;
+  min-width:2px;transition:width .5s ease}
+.fn-drop{font-size:.8rem;color:var(--text3);margin-top:5px}
+/* trend */
+.trend-legend{display:flex;gap:18px;margin-bottom:14px;font-size:.85rem;color:var(--text2);font-weight:600}
+.trend-legend span{display:inline-flex;align-items:center;gap:6px}
+.trend-legend i{width:13px;height:13px;border-radius:3px;display:inline-block}
+.trend-svg{width:100%;height:auto;display:block}
+.trend-svg text{fill:var(--text2);font-family:'Inter',sans-serif}
+.trend-svg .tval{fill:var(--text);font-weight:700}
+
 /* ── RESPONSIVE (mobile-first for 50+ field use) ── */
 @media(max-width:768px){
   /* fluid base + no iOS auto-zoom */
@@ -390,6 +431,13 @@ tbody tr:nth-child(even) td:first-child{background:var(--surf2)}
   .panel{width:100vw}
   .panel-body{padding:18px 16px}
   .panel-header h2{font-size:1.3rem}
+
+  /* dashboard on mobile */
+  .dash-head h2{font-size:1.35rem}
+  .dash-section{padding:16px}
+  .chip{padding:12px 16px;font-size:.9rem;min-height:46px}
+  .lb-name,.lb-val{font-size:1.08rem}
+  .fn-track{height:36px}
 
   /* pinned, high-visibility save confirmation */
   .toolbar .saved-msg{display:none}
@@ -540,9 +588,13 @@ tbody tr:nth-child(even) td:first-child{background:var(--surf2)}
   <!-- TABS -->
   <div class="tabs">
     <button class="tab active" data-tab="board">📋 Board</button>
+    <button class="tab" data-tab="dash">📊 Dashboard</button>
     <button class="tab" data-tab="leads">👥 All Leads</button>
     <button class="tab" data-tab="history">📅 History</button>
   </div>
+
+  <!-- DASHBOARD TAB -->
+  <div id="dashView" style="display:none"></div>
 
   <!-- BOARD TAB -->
   <div id="boardView">
@@ -717,6 +769,7 @@ tbody tr:nth-child(even) td:first-child{background:var(--surf2)}
   let saveTimer = null;
   let panelCtx = null; // {agentId, col}
   let editingLeadId = null;
+  let dashMetric = 'closed'; // leaderboard sort: closed | total | conv
 
   /* ── HELPERS ── */
   function mk(){ return curDate.getFullYear()+'-'+String(curDate.getMonth()+1).padStart(2,'0'); }
@@ -800,6 +853,7 @@ tbody tr:nth-child(even) td:first-child{background:var(--surf2)}
     const t = document.querySelector('.tab.active')?.dataset.tab;
     if(t==='leads')   renderLeadsTab();
     if(t==='history') renderHistory();
+    if(t==='dash')    renderDashboard();
     if(panelCtx)      renderPanel();
   }
   function subscribeRealtime(){
@@ -1222,6 +1276,147 @@ tbody tr:nth-child(even) td:first-child{background:var(--surf2)}
     });
   }
 
+  /* ── DASHBOARD ── */
+  function renderDashboard(){
+    const view = document.getElementById('dashView');
+    const m = mk();
+    const monthName = mLabel(curDate);
+    const inMonth = leads.filter(l=>l.month===m);
+    const stageCount = st => inMonth.filter(l=>l.stage===st).length;
+
+    // KPIs
+    const totalLeads = inMonth.length;
+    const closings   = stageCount('closed');
+    const convRate   = totalLeads ? Math.round(closings/totalLeads*100) : 0;
+
+    const kpiHTML = `
+      <div class="summary-row">
+        <div class="s-card"><div class="val">${totalLeads}</div><div class="lbl">Total Leads</div></div>
+        <div class="s-card hl"><div class="val">${closings}</div><div class="lbl">Closings</div></div>
+        <div class="s-card"><div class="val">${convRate}%</div><div class="lbl">Team Conversion</div></div>
+        <div class="s-card"><div class="val">${agents.length}</div><div class="lbl">Agents</div></div>
+      </div>`;
+
+    // Leaderboard
+    let lbHTML;
+    if(!agents.length){
+      lbHTML = `<div class="dash-empty">Add agents on the Board to see the leaderboard.</div>`;
+    } else {
+      const stat = a => {
+        const total = leads.filter(l=>l.agentId===a.id && l.month===m).length;
+        const closed = leads.filter(l=>l.agentId===a.id && l.stage==='closed' && l.month===m).length;
+        const conv = total ? Math.round(closed/total*100) : 0;
+        return {total, closed, conv};
+      };
+      const rows = agents.map(a=>({a, ...stat(a)}));
+      const metricVal = r => dashMetric==='closed' ? r.closed : dashMetric==='total' ? r.total : r.conv;
+      rows.sort((x,y)=> metricVal(y)-metricVal(x) || y.closed-x.closed || y.total-x.total);
+      const max = Math.max(1, ...rows.map(metricVal));
+      const suffix = dashMetric==='conv' ? '%' : '';
+      lbHTML = `
+        <div class="dash-chips">
+          <div class="chip ${dashMetric==='closed'?'active':''}" data-metric="closed">Closings</div>
+          <div class="chip ${dashMetric==='total'?'active':''}" data-metric="total">Total Leads</div>
+          <div class="chip ${dashMetric==='conv'?'active':''}" data-metric="conv">Conversion %</div>
+        </div>` +
+        rows.map((r,i)=>`
+          <div class="lb-item">
+            <div class="lb-top">
+              <span class="lb-rank">${i+1}</span>
+              <span class="agent-av" style="width:34px;height:34px;background:${r.a.color}">${initials(r.a.name)}</span>
+              <span class="lb-name">${esc(r.a.name)}</span>
+              <span class="lb-val">${metricVal(r)}${suffix}</span>
+            </div>
+            <div class="lb-track"><div class="lb-fill" style="width:${Math.round(metricVal(r)/max*100)}%;background:${r.a.color}"></div></div>
+            <div class="lb-sub" style="margin-top:6px">${r.closed} closed · ${r.total} leads · ${r.conv}% conversion</div>
+          </div>`).join('');
+    }
+
+    // Conversion funnel (cumulative through the deal stages)
+    const FUNNEL = [['appts','Appointments'],['showed','Showed'],['offers','Offers'],['uc','Under Contract'],['closed','Closed']];
+    const rawCounts = FUNNEL.map(([k])=>stageCount(k));
+    // cumulative: leads at this stage or further along
+    const cum = rawCounts.map((_,i)=> rawCounts.slice(i).reduce((s,n)=>s+n,0));
+    const fnMax = Math.max(1, cum[0]);
+    let fnHTML;
+    if(!totalLeads){
+      fnHTML = `<div class="dash-empty">No leads yet for ${monthName}.</div>`;
+    } else {
+      fnHTML = FUNNEL.map(([k,label],i)=>{
+        const val = cum[i];
+        const prev = i>0 ? cum[i-1] : null;
+        const drop = (prev && prev>0) ? Math.round((prev-val)/prev*100) : null;
+        return `
+          <div class="fn-row">
+            <div class="fn-top"><span class="fn-label">${label}</span><span class="fn-count">${val}</span></div>
+            <div class="fn-track"><div class="fn-fill" style="width:${Math.round(val/fnMax*100)}%"></div></div>
+            ${drop!==null ? `<div class="fn-drop">${drop}% drop from ${FUNNEL[i-1][1]}</div>` : ''}
+          </div>`;
+      }).join('');
+    }
+
+    // Month-over-month trend (stacked: total leads with closings highlighted)
+    const months = [...new Set(leads.map(l=>l.month))].sort().slice(-8);
+    let trendHTML;
+    if(!months.length){
+      trendHTML = `<div class="dash-empty">Trends appear once you have leads across months.</div>`;
+    } else {
+      const data = months.map(mm=>{
+        const t = leads.filter(l=>l.month===mm).length;
+        const c = leads.filter(l=>l.month===mm && l.stage==='closed').length;
+        return {mm, t, c};
+      });
+      const tMax = Math.max(1, ...data.map(d=>d.t));
+      const W=Math.max(320, months.length*70), H=220, padB=34, padT=24, padL=8;
+      const chartH = H-padB-padT, bw = (W-padL*2)/data.length, bar = Math.min(46, bw*0.6);
+      const bars = data.map((d,i)=>{
+        const cx = padL + bw*i + bw/2;
+        const th = Math.round(d.t/tMax*chartH);
+        const ch = Math.round(d.c/tMax*chartH);
+        const y = padT+chartH-th;
+        const [yy,mo] = d.mm.split('-');
+        const lbl = new Date(+yy,+mo-1,1).toLocaleDateString('en-US',{month:'short'});
+        return `
+          <rect x="${cx-bar/2}" y="${y}" width="${bar}" height="${th}" rx="4" style="fill:var(--red)"></rect>
+          <rect x="${cx-bar/2}" y="${padT+chartH-ch}" width="${bar}" height="${ch}" rx="4" style="fill:var(--green)"></rect>
+          <text x="${cx}" y="${y-6}" text-anchor="middle" font-size="13" class="tval">${d.t}</text>
+          <text x="${cx}" y="${H-12}" text-anchor="middle" font-size="12">${lbl}</text>`;
+      }).join('');
+      trendHTML = `
+        <div class="trend-legend">
+          <span><i style="background:var(--red)"></i>Total Leads</span>
+          <span><i style="background:var(--green)"></i>Closings</span>
+        </div>
+        <svg class="trend-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Monthly leads and closings">${bars}</svg>`;
+    }
+
+    view.innerHTML = `
+      <div class="dash-head">
+        <h2>Team Performance</h2>
+        <p>Showing ${monthName} · use the ‹ › arrows above to change month</p>
+      </div>
+      ${kpiHTML}
+      <div class="dash-section">
+        <h3>Agent Leaderboard</h3>
+        <div class="sub">Ranked for ${monthName}. Tap a metric to re-rank.</div>
+        ${lbHTML}
+      </div>
+      <div class="dash-section">
+        <h3>Conversion Funnel</h3>
+        <div class="sub">How ${monthName}'s leads progress from appointment to close</div>
+        ${fnHTML}
+      </div>
+      <div class="dash-section">
+        <h3>Month-over-Month Trend</h3>
+        <div class="sub">Total leads and closings, last ${months.length||0} month${months.length===1?'':'s'}</div>
+        ${trendHTML}
+      </div>`;
+
+    view.querySelectorAll('.chip[data-metric]').forEach(c=>{
+      c.addEventListener('click',()=>{ dashMetric = c.dataset.metric; renderDashboard(); });
+    });
+  }
+
   /* ── TABS ── */
   document.querySelectorAll('.tab').forEach(tab=>{
     tab.addEventListener('click',()=>{
@@ -1229,8 +1424,10 @@ tbody tr:nth-child(even) td:first-child{background:var(--surf2)}
       tab.classList.add('active');
       const t = tab.dataset.tab;
       document.getElementById('boardView').style.display   = t==='board'?'':'none';
+      document.getElementById('dashView').style.display    = t==='dash'?'':'none';
       document.getElementById('leadsView').style.display   = t==='leads'?'':'none';
       document.getElementById('historyView').style.display = t==='history'?'':'none';
+      if(t==='dash') renderDashboard();
       if(t==='leads') renderLeadsTab();
       if(t==='history') renderHistory();
     });
@@ -1242,9 +1439,11 @@ tbody tr:nth-child(even) td:first-child{background:var(--surf2)}
   }
   document.getElementById('prevBtn').addEventListener('click',()=>{
     curDate.setMonth(curDate.getMonth()-1); updateMonthLabel(); renderBoard();
+    if(document.querySelector('.tab.active')?.dataset.tab==='dash') renderDashboard();
   });
   document.getElementById('nextBtn').addEventListener('click',()=>{
     curDate.setMonth(curDate.getMonth()+1); updateMonthLabel(); renderBoard();
+    if(document.querySelector('.tab.active')?.dataset.tab==='dash') renderDashboard();
   });
 
   /* ── EXPORT ── */
