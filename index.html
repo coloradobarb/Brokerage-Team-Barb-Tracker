@@ -262,13 +262,46 @@ tbody tr:hover .del-row{opacity:1}
 .empty p{font-size:.95rem;line-height:1.6}
 .loading-row td{padding:50px;text-align:center;color:var(--text3);font-size:.95rem}
 
+/* ── MOBILE BOARD CARDS ── */
+.board-cards{display:none;flex-direction:column;gap:12px;padding:14px}
+.agent-card{background:var(--surf2);border:1px solid var(--border);border-radius:14px;padding:14px 14px 12px}
+.agent-card-head{display:flex;align-items:center;gap:11px;margin-bottom:12px}
+.agent-card-name{font-weight:700;font-size:1rem;line-height:1.2}
+.agent-card-sub{font-size:.72rem;color:var(--text3);margin-top:2px}
+.agent-card-total{margin-left:auto;text-align:center;flex-shrink:0}
+.agent-card-total b{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;color:var(--red);line-height:1;display:block}
+.agent-card-total span{font-size:.6rem;text-transform:uppercase;letter-spacing:.04em;color:var(--text3)}
+.mcards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.mcard{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  padding:11px 4px;border:1.5px solid var(--border);border-radius:10px;background:var(--surf);
+  cursor:pointer;transition:transform .1s;-webkit-tap-highlight-color:transparent}
+.mcard:active{transform:scale(.95)}
+.mcard.has{background:var(--surf3);border-color:var(--border2)}
+.mcard .mv{font-size:1.3rem;font-weight:800;color:var(--text);line-height:1}
+.mcard.has .mv{color:var(--red)}
+.mcard .ml{font-size:.62rem;font-weight:600;text-transform:uppercase;letter-spacing:.02em;
+  color:var(--text3);text-align:center;line-height:1.15}
+.agent-card-remove{width:100%;margin-top:11px;padding:9px;border:1px solid var(--border);
+  border-radius:9px;background:transparent;color:var(--text3);font-size:.8rem;font-weight:500;cursor:pointer}
+.agent-card-remove:active{background:var(--red);color:#fff;border-color:var(--red)}
+
 /* ── RESPONSIVE ── */
 @media(max-width:768px){
-  .topbar{padding:14px 18px}
-  .main{padding:20px 16px 70px}
-  .summary-row{grid-template-columns:repeat(2,1fr)}
+  .topbar{padding:14px 16px}
+  .brand-text h1{font-size:1.02rem}
+  .main{padding:18px 12px 70px}
+  .summary-row{grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:20px}
+  .s-card{padding:14px 16px}
+  .s-card .val{font-size:1.7rem}
   .form-row{grid-template-columns:1fr}
   .hist-card{flex-direction:column;align-items:flex-start}
+  .tabs{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .tab{padding:12px 15px;white-space:nowrap}
+  /* swap the wide table for stacked cards */
+  .table-wrap .table-scroll{display:none}
+  .board-cards{display:flex}
+  .leads-controls input{min-width:0}
+  .panel{width:100vw}
 }
 </style>
 </head>
@@ -412,6 +445,7 @@ tbody tr:hover .del-row{opacity:1}
           <tbody id="tableBody"></tbody>
         </table>
       </div>
+      <div class="board-cards" id="boardCards"></div>
       <div class="add-row">
         <input type="text" id="newAgentInput" placeholder="Agent name..." maxlength="30"/>
         <button class="btn-red" id="addAgentBtn">+ Add Agent</button>
@@ -442,6 +476,7 @@ tbody tr:hover .del-row{opacity:1}
               <th>Stage</th>
               <th>Phone</th>
               <th>Email</th>
+              <th>Address</th>
               <th>Source</th>
               <th>Date Added</th>
             </tr>
@@ -534,6 +569,10 @@ tbody tr:hover .del-row{opacity:1}
             <option value="reviews">5-Star Reviews</option>
           </select>
         </div>
+      </div>
+      <div class="form-group">
+        <label>Address</label>
+        <input type="text" id="fldAddress" placeholder="123 Main St, City, State"/>
       </div>
       <div class="form-group">
         <label>Notes</label>
@@ -701,7 +740,53 @@ tbody tr:hover .del-row{opacity:1}
     });
   }
 
-  function renderBoard(){ renderSummary(); renderTable(); }
+  function renderCards(){
+    const wrap = document.getElementById('boardCards');
+    if(!wrap) return;
+    if(!agents.length){
+      wrap.innerHTML='<div class="empty" style="padding:40px 20px"><div class="icon">+</div><p>No agents yet. Add your first agent below.</p></div>';
+      return;
+    }
+    const SHORT={appts:'Appts',vipSeller:'VIP Seller',vipBuyer:'VIP Buyer',showed:'Showed',
+      offers:'Offers',uc:'UC',referrals:'Referrals',closed:'Closed',reviews:'Reviews'};
+    wrap.innerHTML = agents.map(agent=>{
+      const total = rowTotal(agent.id);
+      const tiles = COLS.map(col=>{
+        const cnt = leadsForCell(agent.id,col).length;
+        return `<div class="mcard${cnt>0?' has':''}" data-aid="${agent.id}" data-col="${col}">
+          <span class="mv">${cnt}</span><span class="ml">${SHORT[col]}</span>
+        </div>`;
+      }).join('');
+      return `<div class="agent-card">
+        <div class="agent-card-head">
+          <div class="agent-av" style="background:${agent.color}">${initials(agent.name)}</div>
+          <div>
+            <div class="agent-card-name">${esc(agent.name)}</div>
+            <div class="agent-card-sub">this month</div>
+          </div>
+          <div class="agent-card-total"><b>${total}</b><span>leads</span></div>
+        </div>
+        <div class="mcards">${tiles}</div>
+        <button class="agent-card-remove" data-del="${agent.id}">Remove agent</button>
+      </div>`;
+    }).join('');
+
+    wrap.querySelectorAll('.mcard').forEach(el=>{
+      el.addEventListener('click',()=>openPanel(el.dataset.aid, el.dataset.col));
+    });
+    wrap.querySelectorAll('[data-del]').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const a = agents.find(x=>x.id===btn.dataset.del);
+        if(a && confirm(`Remove ${a.name} and all their leads this month?`)){
+          agents = agents.filter(x=>x.id!==btn.dataset.del);
+          leads = leads.filter(l=>!(l.agentId===btn.dataset.del&&l.month===mk()));
+          renderBoard(); queueSave();
+        }
+      });
+    });
+  }
+
+  function renderBoard(){ renderSummary(); renderTable(); renderCards(); }
 
   /* ── PANEL ── */
   function openPanel(agentId, col){
@@ -734,6 +819,7 @@ tbody tr:hover .del-row{opacity:1}
           <div class="lead-detail"><span>Email</span>${esc(l.email||'—')}</div>
           <div class="lead-detail"><span>Source</span>${esc(l.source||'—')}</div>
           <div class="lead-detail"><span>Added</span>${esc(l.date||'—')}</div>
+          ${l.address?`<div class="lead-detail" style="grid-column:span 2"><span>Address</span>${esc(l.address)}</div>`:''}
           ${l.notes?`<div class="lead-detail" style="grid-column:span 2"><span>Notes</span>${esc(l.notes)}</div>`:''}
         </div>
         <div class="lead-actions">
@@ -779,6 +865,7 @@ tbody tr:hover .del-row{opacity:1}
     document.getElementById('fldPhone').value = lead?.phone||'';
     document.getElementById('fldEmail').value = lead?.email||'';
     document.getElementById('fldSource').value= lead?.source||'';
+    document.getElementById('fldAddress').value = lead?.address||'';
     document.getElementById('fldNotes').value = lead?.notes||'';
     document.getElementById('fldStage').value = lead?.stage || col || 'appts';
     document.getElementById('leadModal').classList.add('open');
@@ -807,6 +894,7 @@ tbody tr:hover .del-row{opacity:1}
           phone:document.getElementById('fldPhone').value.trim(),
           email:document.getElementById('fldEmail').value.trim(),
           source:document.getElementById('fldSource').value,
+          address:document.getElementById('fldAddress').value.trim(),
           notes:document.getElementById('fldNotes').value.trim(),
           stage,
         };
@@ -823,6 +911,7 @@ tbody tr:hover .del-row{opacity:1}
         phone:document.getElementById('fldPhone').value.trim(),
         email:document.getElementById('fldEmail').value.trim(),
         source:document.getElementById('fldSource').value,
+        address:document.getElementById('fldAddress').value.trim(),
         notes:document.getElementById('fldNotes').value.trim(),
         stage,
         date:new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}),
@@ -870,13 +959,13 @@ tbody tr:hover .del-row{opacity:1}
     const stageF = document.getElementById('leadFilterStage').value;
     const filtered = leads.filter(l=>{
       const a = agents.find(x=>x.id===l.agentId);
-      const txt = [l.first,l.last,l.phone,l.email,l.source,l.notes,a?.name||''].join(' ').toLowerCase();
+      const txt = [l.first,l.last,l.phone,l.email,l.source,l.address,l.notes,a?.name||''].join(' ').toLowerCase();
       return (!q||txt.includes(q)) && (!agentF||l.agentId===agentF) && (!stageF||l.stage===stageF);
     });
 
     const tbody = document.getElementById('leadsBody');
     if(!filtered.length){
-      tbody.innerHTML='<tr class="loading-row"><td colspan="7"><div class="empty"><div class="icon">○</div><p>No leads match your filters.</p></div></td></tr>';
+      tbody.innerHTML='<tr class="loading-row"><td colspan="8"><div class="empty"><div class="icon">○</div><p>No leads match your filters.</p></div></td></tr>';
       return;
     }
 
@@ -891,6 +980,7 @@ tbody tr:hover .del-row{opacity:1}
         <td>${stagePill(l.stage)}</td>
         <td>${esc(l.phone||'—')}</td>
         <td>${esc(l.email||'—')}</td>
+        <td>${esc(l.address||'—')}</td>
         <td>${esc(l.source||'—')}</td>
         <td style="color:var(--text3);font-size:.82rem">${esc(l.date||'—')}</td>
       </tr>`;
@@ -964,10 +1054,10 @@ tbody tr:hover .del-row{opacity:1}
 
   /* ── EXPORT ── */
   document.getElementById('exportBtn').addEventListener('click',()=>{
-    const rows = [['Agent','Stage','First','Last','Phone','Email','Source','Notes','Date','Month']];
+    const rows = [['Agent','Stage','First','Last','Phone','Email','Address','Source','Notes','Date','Month']];
     leads.forEach(l=>{
       const a=agents.find(x=>x.id===l.agentId);
-      rows.push([a?.name||'',COL_LABELS[l.stage]||l.stage,l.first,l.last,l.phone,l.email,l.source,l.notes,l.date,l.month]);
+      rows.push([a?.name||'',COL_LABELS[l.stage]||l.stage,l.first,l.last,l.phone,l.email,l.address,l.source,l.notes,l.date,l.month]);
     });
     const csv=rows.map(r=>r.map(v=>`"${(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');
     const a=document.createElement('a');
