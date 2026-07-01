@@ -214,13 +214,14 @@ tbody tr:hover .del-row{opacity:1}
   opacity:0;pointer-events:none;transition:opacity .25s}
 .modal-backdrop.open{opacity:1;pointer-events:all}
 .modal{background:var(--surf);border:1px solid var(--border);border-radius:var(--radius-lg);
-  width:100%;max-width:480px;box-shadow:var(--shadow);
+  width:100%;max-width:480px;max-height:90vh;box-shadow:var(--shadow);
+  display:flex;flex-direction:column;overflow:hidden;
   transform:scale(.96);transition:transform .25s}
 .modal-backdrop.open .modal{transform:scale(1)}
-.modal-header{padding:22px 24px 0;display:flex;justify-content:space-between;align-items:flex-start}
+.modal-header{padding:22px 24px 0;display:flex;justify-content:space-between;align-items:flex-start;flex-shrink:0}
 .modal-header h3{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700}
-.modal-body{padding:20px 24px;display:flex;flex-direction:column;gap:14px}
-.modal-footer{padding:0 24px 22px;display:flex;gap:10px;justify-content:flex-end}
+.modal-body{padding:20px 24px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1}
+.modal-footer{padding:16px 24px;display:flex;gap:10px;justify-content:flex-end;flex-shrink:0;border-top:1px solid var(--border)}
 .form-group{display:flex;flex-direction:column;gap:6px}
 .form-group label{font-size:.8rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.04em}
 .form-group input,.form-group select{
@@ -370,6 +371,8 @@ tbody tr:nth-child(even) td:first-child{background:var(--surf2)}
   .form-group label{font-size:.9rem;margin-bottom:3px;letter-spacing:.02em}
   .form-row{grid-template-columns:1fr;gap:16px}
   .modal-body{gap:16px;padding:20px 18px}
+  .modal-backdrop{padding:10px;align-items:flex-start}
+  .modal{max-height:94vh;margin-top:8px}
   .modal-header h3{font-size:1.3rem}
 
   /* buttons: 48px+ touch targets */
@@ -662,19 +665,8 @@ tbody tr:nth-child(even) td:first-child{background:var(--surf2)}
       <div class="form-row">
         <div class="form-group">
           <label>Lead Source</label>
-          <select id="fldSource">
-            <option value="">Select source...</option>
-            <option>Database</option>
-            <option>Referral</option>
-            <option>Open House</option>
-            <option>Social Media</option>
-            <option>Website</option>
-            <option>Zillow</option>
-            <option>Realtor.com</option>
-            <option>Cold Call</option>
-            <option>Sign Call</option>
-            <option>Other</option>
-          </select>
+          <select id="fldSource"></select>
+          <input type="text" id="fldSourceNew" placeholder="Type the new source name..." style="display:none;margin-top:8px"/>
         </div>
         <div class="form-group">
           <label>Pipeline Stage *</label>
@@ -715,12 +707,13 @@ tbody tr:nth-child(even) td:first-child{background:var(--surf2)}
     showed:'Showed',offers:'# Offers',uc:'UC',referrals:'Referrals',closed:'Closed',reviews:'5-Star Reviews'};
   const STAGE_LABELS = COL_LABELS;
   const AGENT_COLORS = ['#2E4B72','#1B3FD8','#B8860B','#16a34a','#7C3AED','#0891B2','#EA580C','#DB2777','#475569','#059669'];
-  const SOURCES = ['Database','Referral','Open House','Social Media','Website','Zillow','Realtor.com','Cold Call','Sign Call','Other'];
+  const DEFAULT_SOURCES = ['Zillow','Realtor.com','Lofty','Facebook','Referrals','Instagram','LinkedIn','Twitter'];
 
   let curDate = new Date();
   let agents = [];   // [{id,name,color}]
   let leads = [];    // [{id,agentId,first,last,phone,email,source,stage,notes,date,month}]
   let monthIndex = [];
+  let sources = [];  // shared list of lead sources
   let saveTimer = null;
   let panelCtx = null; // {agentId, col}
   let editingLeadId = null;
@@ -740,18 +733,28 @@ tbody tr:nth-child(even) td:first-child{background:var(--surf2)}
   }
 
   /* ── STORAGE (cloud / Firebase) ── */
+  function withDefaults(list){
+    const out = DEFAULT_SOURCES.slice();
+    (list||[]).forEach(s=>{
+      if(s && !out.some(x=>x.toLowerCase()===String(s).toLowerCase())) out.push(String(s));
+    });
+    return out;
+  }
   async function loadAll(){
     try{
-      if(!window.__cloud.get){ agents=[]; leads=[]; monthIndex=[]; return; }
-      const [a,l,i] = await Promise.all([
+      if(!window.__cloud.get){ agents=[]; leads=[]; monthIndex=[]; sources=DEFAULT_SOURCES.slice(); return; }
+      const [a,l,i,s] = await Promise.all([
         window.__cloud.get('agents').catch(()=>null),
         window.__cloud.get('leads').catch(()=>null),
         window.__cloud.get('monthIndex').catch(()=>null),
+        window.__cloud.get('sources').catch(()=>null),
       ]);
       agents     = a ? JSON.parse(a) : [];
       leads      = l ? JSON.parse(l) : [];
       monthIndex = i ? JSON.parse(i) : [];
-    }catch(e){ console.error(e); agents=[]; leads=[]; monthIndex=[]; }
+      const loadedSources = s ? JSON.parse(s) : [];
+      sources    = withDefaults(loadedSources);
+    }catch(e){ console.error(e); agents=[]; leads=[]; monthIndex=[]; sources=DEFAULT_SOURCES.slice(); }
   }
 
   function setSaveBar(text, cls){
@@ -770,6 +773,7 @@ tbody tr:nth-child(even) td:first-child{background:var(--surf2)}
         window.__cloud.set('agents',     JSON.stringify(agents)),
         window.__cloud.set('leads',      JSON.stringify(leads)),
         window.__cloud.set('monthIndex', JSON.stringify(monthIndex)),
+        window.__cloud.set('sources',    JSON.stringify(sources)),
       ]);
       const stamp = 'Saved · '+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
       const el = document.getElementById('savedMsg');
@@ -813,6 +817,9 @@ tbody tr:nth-child(even) td:first-child{background:var(--surf2)}
     });
     window.__cloud.subscribe('monthIndex', (v)=>{
       if(v){ try{ monthIndex = JSON.parse(v); }catch(e){} }
+    });
+    window.__cloud.subscribe('sources', (v)=>{
+      try{ sources = withDefaults(v ? JSON.parse(v) : []); }catch(e){}
     });
   }
 
@@ -989,6 +996,25 @@ tbody tr:nth-child(even) td:first-child{background:var(--surf2)}
   });
 
   /* ── LEAD MODAL ── */
+  function populateSourceSelect(selected){
+    const sel = document.getElementById('fldSource');
+    let html = '<option value="">Select source...</option>';
+    html += sources.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join('');
+    // keep an existing lead's source even if it's not in the shared list
+    if(selected && !sources.some(s=>s===selected)){
+      html += `<option value="${esc(selected)}">${esc(selected)}</option>`;
+    }
+    html += '<option value="__new__">➕ Add new source…</option>';
+    sel.innerHTML = html;
+    sel.value = selected || '';
+  }
+  document.getElementById('fldSource').addEventListener('change', function(){
+    const isNew = this.value === '__new__';
+    const inp = document.getElementById('fldSourceNew');
+    inp.style.display = isNew ? 'block' : 'none';
+    if(isNew){ setTimeout(()=>inp.focus(),50); } else { inp.value=''; }
+  });
+
   function openLeadModal(leadId=null, agentId=null, col=null){
     editingLeadId = leadId;
     const lead = leadId ? leads.find(l=>l.id===leadId) : null;
@@ -997,7 +1023,9 @@ tbody tr:nth-child(even) td:first-child{background:var(--surf2)}
     document.getElementById('fldLast').value  = lead?.last||'';
     document.getElementById('fldPhone').value = lead?.phone||'';
     document.getElementById('fldEmail').value = lead?.email||'';
-    document.getElementById('fldSource').value= lead?.source||'';
+    populateSourceSelect(lead?.source||'');
+    document.getElementById('fldSourceNew').style.display='none';
+    document.getElementById('fldSourceNew').value='';
     document.getElementById('fldAddress').value = lead?.address||'';
     document.getElementById('fldNotes').value = lead?.notes||'';
     document.getElementById('fldStage').value = lead?.stage || col || 'appts';
@@ -1019,6 +1047,11 @@ tbody tr:nth-child(even) td:first-child{background:var(--surf2)}
     const stage = document.getElementById('fldStage').value;
     const agentId = document.getElementById('leadModal').dataset.agentId;
 
+    // resolve lead source (existing pick, or a brand-new one being added)
+    let source = document.getElementById('fldSource').value;
+    if(source === '__new__'){ source = document.getElementById('fldSourceNew').value.trim(); }
+    if(source && !sources.some(s=>s.toLowerCase()===source.toLowerCase())){ sources.push(source); }
+
     if(editingLeadId){
       const idx = leads.findIndex(l=>l.id===editingLeadId);
       if(idx>-1){
@@ -1026,7 +1059,7 @@ tbody tr:nth-child(even) td:first-child{background:var(--surf2)}
           first,last,
           phone:document.getElementById('fldPhone').value.trim(),
           email:document.getElementById('fldEmail').value.trim(),
-          source:document.getElementById('fldSource').value,
+          source,
           address:document.getElementById('fldAddress').value.trim(),
           notes:document.getElementById('fldNotes').value.trim(),
           stage,
@@ -1043,7 +1076,7 @@ tbody tr:nth-child(even) td:first-child{background:var(--surf2)}
         first, last,
         phone:document.getElementById('fldPhone').value.trim(),
         email:document.getElementById('fldEmail').value.trim(),
-        source:document.getElementById('fldSource').value,
+        source,
         address:document.getElementById('fldAddress').value.trim(),
         notes:document.getElementById('fldNotes').value.trim(),
         stage,
